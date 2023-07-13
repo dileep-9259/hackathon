@@ -68,7 +68,7 @@ def f1():
     message = "Answer in single word. Categorise the statement  for shopping app user input " + input_string + " into the following search / buy / pick  / scroll down / scroll up  / exit "
     print("Input Message : " + input_string)
     response = openai.ChatCompletion.create(
-        engine="TheGeneratorsGPT35",
+        engine="TheGeneratorsGPT35-16k",
         messages=[
             {"role": "user", "content": message},
             {"role": "system", "content": "A shopping app where user is searching by voice. Search means user is trying to query for a product "},
@@ -103,7 +103,7 @@ def f1():
 
 
 @app.route("/plp", methods=['POST'])
-def plp():
+def fetchPlpAPI():
     products_list = plp()
     new_obj = {
         "plp": func1(products_list)
@@ -118,7 +118,7 @@ def delete():
     message = input_string  # "Answer in single word Categorise the statement " + input_string + " into the following search / buy / scroll down / scroll up  / exit"
     print(message)
     response = openai.ChatCompletion.create(
-        engine="TheGeneratorsGPT35",
+        engine="TheGeneratorsGPT35-16k",
         messages=[
             {"role": "user", "content": message}
         ]
@@ -138,7 +138,7 @@ def search(input_string):
     message = "Can you find category, color , fabric, occasion, sleeve type ,price from the string " + input_string + " reply each in one upper case as json capital word as json"
     print(message)
     response = openai.ChatCompletion.create(
-        engine="TheGeneratorsGPT35",
+        engine="TheGeneratorsGPT35-16k",
         messages=[
             {"role": "user", "content": message}
         ]
