@@ -13,7 +13,7 @@ CORS(app)
 input_string = "show some red dress"
 message ="Answer in single word. Categorise the statement  for shopping app user input " + input_string + " into the following search / buy / pick  / scroll down / scroll up  / exit "
 response = openai.ChatCompletion.create(
-    engine="TheGeneratorsGPT35",
+    engine="TheGeneratorsGPT35-16k",
     messages=[
         {"role": "user", "content": message},
         {"role": "system", "content": "A shopping app where user is searching by voice. Search means user is trying to query for a product "},
