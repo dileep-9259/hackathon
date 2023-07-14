@@ -669,7 +669,14 @@ def fetchPlpBasedOnIdApi(pids):
     }
     return new_obj
 
+@app.route("/", methods=['GET'])
+def fetchPlpBasedOnIdApi():
+    print("Hello")
+    return "hello"
+
+
+
 if __name__ == '__main__':
     service = Service()
     service.intializeDatabase()
-    app.run(port=7777)
+    app.run(host="0.0.0.0", port=7777)
