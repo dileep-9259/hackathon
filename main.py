@@ -148,7 +148,7 @@ class Service:
 
 
     def loadAsLists(self,path):
-        path = "/final_attributes_excel.xlsx"
+        path = "/home/dileep_nagudasari/hackathon/final_attributes_excel.xlsx"
         l_data = load_workbook(path)
         sheet = l_data.active
         c_row = sheet.max_row
@@ -186,7 +186,7 @@ class Service:
         # Create reader object by passing the file
         # object to reader method
         #reader_obj = csv.reader(file_obj)
-        reader_obj = self.loadAsLists(r'/final_attributes_excel.xlsx')
+        reader_obj = self.loadAsLists(r'/home/dileep_nagudasari/hackathon/final_attributes_excel.xlsx')
 
         # Iterate over each row in the csv
         # file using reader
