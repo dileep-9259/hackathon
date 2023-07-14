@@ -151,7 +151,7 @@ class Service:
         firstline = True
         for rowWithCase in reader_obj:
             print("rowcase")
-            print(rowWithCase)
+            #print(rowWithCase)
             row = [str(x).lower() for x in rowWithCase]
             if firstline == True :
                 idToHeader = {v: k for v, k in enumerate(row)}
@@ -199,7 +199,7 @@ class Service:
                         globalpids = self.searchDictionary(searchDict[attr],attribute_inverse_index[attr])
 
                 print("result from reverse index")
-                print(globalpids)
+                #print(globalpids)
                 # do regex search here
                 regexPids = {-1}
                 if globalpids is None:
@@ -208,18 +208,18 @@ class Service:
                     if searchDict[attr] in des:
                         regexPids.union(pids)
                 print("result from product_description regexx")
-                print(regexPids)
+                #print(regexPids)
                 for des,pids in product_name.items() :
                     if searchDict[attr] in des:
                         regexPids = regexPids.union(pids)
                 print("result from product_name regexx")
-                print(regexPids)
+               # print(regexPids)
                 globalpids = globalpids.union(regexPids)
 
                 filteredpid = []
                 print("ready 3")
                 print("all pids")
-                print(globalpids)
+                #print(globalpids)
 
                 if attr == 'category' :
                     globalpids = globalpids.union(category[searchDict['category']])
@@ -231,7 +231,7 @@ class Service:
                         filteredpid.append(pid)
 
                 print("ready 4")
-                print(filteredpid)
+                #print(filteredpid)
 
                 for pid in filteredpid :
                     if pid == -1:
@@ -247,7 +247,7 @@ class Service:
 
 
 
-        print(productScore)
+        #print(productScore)
         sortedList  = nlargest(size, productScore, key=productScore.get)
         if "-1" in sortedList:
             sortedList.remove("-1")
@@ -259,7 +259,7 @@ class Service:
         sortedList = self.getPLPList(searchDict)
         #sortedList.remove(-1)
         print("sorted list")
-        print(sortedList)
+        #print(sortedList)
         plpList = [products[pid] for pid in sortedList ]
         return plpList
 
@@ -411,16 +411,20 @@ def f1():
     print("user intent is : " + user_intention)
     if ("search" in user_intention.lower()):
         print("Search flow started")
-        extracted_attributes = search(message)
-        print("Attributes Extaction : " + extracted_attributes)
-        products_list = service.getPLPPojoList(eval(extracted_attributes))
+        extracted_attributes =  {"color": "red", "category": "kurti"}
+            #search(message)
+        print("Attributes Extaction : " )
+        print(extracted_attributes)
+        evaluadted=eval(str(extracted_attributes))
+        print("Evaluated " + str(evaluadted))
+        products_list = service.getPLPPojoList(evaluadted)
         print(products_list)
         print("Search flow ended")
         prev_input.append(input_string)
         pre_output.append(extracted_attributes)
         new_obj = {
             "user_intent": user_intention.upper(),
-            "plp": products_list
+            "plp": func1(products_list)
         }
 
     elif("pick" in user_intention.lower()):
