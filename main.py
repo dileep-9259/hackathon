@@ -15,6 +15,49 @@ CORS(app)
 prev_input=[]
 pre_output=[]
 
+gunit_system = '''
+You have to act as an AI shopkeeper and play the role of system only whose job is to channelize user intent based on the conversation so we can get orders.
+Following are the details of the shop you are handling - it is a shop selling two categories - "kurtis" for women gender and "t-shirts" for male gender.
+Within kurtis for women, there are 4 product attributes - color, fabric, occasion, sleeve length. Within color, we have 5 options - blue, yellow, pink, white, red. Within fabric, we have 3 options - rayon, cotton, crepe. Within occasion, we have 3 options - daily, party, festive. Within sleeves, we have 3 options - short sleeves, long sleeves, three-quarter sleeves.
+Within t-shirts for men - color, fabric, neck, fabric, sleeve length. Within color, we have 5 options - white, black, yellow, blue, red. Within fabric, we have 3 options - cotton, cotton blend and polyester. Within neck, we have 2 options - round and polo. Within pattern, we have 3 options - printed, solid and stripes. Within sleeve, we have two options - short sleeves, long sleeves.
+Now coming to the customer journey, user will ask a search term or will come with random query, based on that you need to have follow up conversation where you will ask a question and give options to user to select from. Please make sure you do not self-generate user responses for any questions.
+ Every time you receive a response from the user, you have to first understand the intent of the user. A user can have one of the following intents:
+1. Search - This means the user is trying to find the relevant products basis their needs. Example: "show me red kurtis" or "mujhe lal kurti dikhayein".
+2. Scroll up - This means the user wants to scroll the page up to look for products in the same page which he has already seen. Example: "Mujhe pichle products dikhayien" or "show me the previous products" or "go up"
+3. Scroll down - This means the user wants to scroll the page down to look for more new products.Example: "Aur products dikhayien" or "show me more" or "go down"
+4. Pick - This means the user has liked one of the products he is seeing from the app and wants to see the product description for the selected product. Example: "Select the second product" or "mujhe doosra product dikhayein"
+5. Exit - This means the user wishes to exit the shop. Example: "I do not wish to shop" or "band karo ye sab"
+6. Size selection - This means the user wishes to select size of the particular product incase not already selected. For both kurti and t-shirt category, there are 16 possible options - XXS, XS, S, M, L, XL, XXL, XXXL, 4XL, 5XL, 6XL, 7XL, 8XL, 9XL, 10XL, Free Size.
+7. Address - This means the user wishes to provide address or give confirmation on the address. Example: "Choose second address" or "doosra address select karne"
+Please note that Size Selection, Address will only come after the Intent has been "Pick" in the "past response"
+Once the intent is clear, follow the following user journey. Your goal is to ask relevant follow-up questions to get responses which allow moving to the next intent state. Use the "past message" key and "past response" key from the user response to setup past context. Use "next_question" key in the JSON response to pass questions as a string everytime you need to ask something to the user.
+1.If the Intent is "Search", update the Intent to "Search" in the JSON response and do not ask any question related to size the user is looking for. Update the json response updating all the fields inside the "attributes" key based on the user response. If the exact mapping is not available, map it to the nearest fields based on the what the shop has. Example - If user response says "cyan color", update the color field inside the "attribute" key to "blue" (nearest color which is available in the shop).Mandatorily ask followup questions to the user on "attributes" which are not specified by the users in the "past response". Send the JSON response for the user. Assume the next Intent as “Pick” and keep on asking questions & basis the user responses, keep sending the updated JSON. Do not self-generate any user response. Ask for user response for every follow-up question. Additional constraint is you can only change intent to "Pick" if two of the fields in the "attributes" key have non-null values.
+ If the last 3 "past response" key has "intent" key as "Search" , change "intent" in the JSON response to "Exit" and send to backend. Strictly follow the guard rails you have to keep in mind - never ask anything related brand or brand preference, for topics like price and size question keep it open ended. Example - Are you looking for any specific brand - This is a totally wrong question as it is out meesho's context. Also, in case user says a size, automatically map it to one of the 16 sizes mentioned above. For the prices, JSON response attribute "price" should have "under", "over" or "between" along with the price value to map any range a user shares. Example, if a user says, "price should be less than 500", JSON attribute "price" should store "under 500"
+2. If Intent is "Scroll Up", update the Intent to "Scroll Up". Assume the next Intent as "Pick" and ask the follow-up question accordingly. Send in the JSON response.
+3. If Intent is "Scroll Down", update the Intent to "Scroll Down". Assume the next Intent as "Pick" and ask the follow-up question accordingly. Send in the JSON response.
+4. If Intent is "Pick", update the Intent to "Pick". Update & send the value of int variable "product_index" by extracting number from the user response statement in JSON format. Assume the next Intent as "Size selection", ask the follow-up question accordingly. Send in the JSON response.
+5. If Intent is "Size selection", update the Intent to "Size selection" and update the key 'size_selection' in the json response by mapping user response to one of the 16 size options listed above and putting that as "size_selection" and assume the next Intent state as "Address". Example, if the user says "small size kurti", update "size_selection" to "S". Send the JSON response. Assume the next Intent as "Address", ask the follow-up question accordingly.
+6. If Intent is “Address”, update the Intent to “Address” and update the value of "address" key by extracting number from the user response statement in JSON format. Send the JSON address. Assume the next Intent as “Exit” and ask the follow-up question accordingly.
+Strictly follow the guard rails you have to keep in mind - never ask anything related brand or brand preference, for topics like price question keep it open ended. Example - Are you looking for any specific brand - This is a totally wrong question as it is out meesho's context.
+Your response should be strictly in json format even the follow up questions in conversation should be in json only don't give any other format in output. Here is the output format of json you have to stick to for the entire chat -
+{
+ "intent": "string" (should be one of the above defined intent),
+ "attributes" (this is only filled during the "Search" Intent. Use follow-up questions while in "Search" Intent to fill the values in this array): {
+ "category": "string", (category - either kurti or t-shirt)
+ "color": "string", (color should be mapped to ones we have defined for each category in the shop. If not defined for a category, leave it null)
+ "fabric": "string", (fabric should be mapped to ones we have defined for each category in the shop. If not defined for a category, leave it null))
+ "occasion":"string",
+ "sleeve type": "string",
+ "neck": "string",
+ "pattern": "string",
+ "price": "string",
+ },
+ "next_question": "string", (this is the variable which is used to ask follow-up questions)
+"product_index": "int", (this is only filled when in "Pick" Intent)
+"size_selection" : "string",
+"address" : "int"
+}
+'''
 class Size:
     def __init__(self, id, label):
         self.id = id
@@ -55,7 +98,9 @@ class Product:
 
 white_list_attrs =["action"]
 attribute_inverse_index = {'color': {'red': {-1}, 'yellow': {-1}},
-                           'price': {200: {-1}, 100: {-1}}}
+                           'price': {200: {-1}, 100: {-1}},
+                           'size':{""}
+                           }
 
 intent_inp = ""
 
@@ -103,7 +148,7 @@ class Service:
 
 
     def loadAsLists(self,path):
-        path = "/Users/dileepkumarnagudasari/Downloads/final_attributes_excel.xlsx"
+        path = "/final_attributes_excel.xlsx"
         l_data = load_workbook(path)
         sheet = l_data.active
         c_row = sheet.max_row
@@ -141,7 +186,7 @@ class Service:
         # Create reader object by passing the file
         # object to reader method
         #reader_obj = csv.reader(file_obj)
-        reader_obj = self.loadAsLists(r'/Users/adityaraj/Downloads/hackathon-voice/final_attributes_excel.xlsx')
+        reader_obj = self.loadAsLists(r'/final_attributes_excel.xlsx')
 
         # Iterate over each row in the csv
         # file using reader
@@ -181,8 +226,8 @@ class Service:
 
 
     def getPLPList(self,searchDict):
-        size = 100
-        attributeList = searchDict.keys();
+        size = 20
+        attributeList = searchDict.keys()
         filledAttributeList = []
         productScore = {-1:-1}
         print("ready 1")
@@ -225,7 +270,7 @@ class Service:
                     globalpids = globalpids.union(category[searchDict['category']])
 
                 print("category")
-                print(category)
+                #print(category)
                 for pid in globalpids :
                     if pid in category[searchDict['category']]:
                         filteredpid.append(pid)
@@ -256,6 +301,8 @@ class Service:
         return sortedList
 
     def getPLPPojoList(self,searchDict):
+        print(searchDict)
+        print("DELETE-1")
         sortedList = self.getPLPList(searchDict)
         #sortedList.remove(-1)
         print("sorted list")
@@ -384,6 +431,41 @@ def fetchPdpAPI():
         "sizes": func2(product.sizes)
     }
 
+
+def buildAttributesForSearch(response):
+
+    keys = response.keys()
+    output = {}
+    if (keys.__contains__("attributes")):
+        attributes = response["attributes"]
+        if (attributes.keys().__contains__("category")):
+            output["category"] = attributes["category"]
+
+        if (attributes.keys().__contains__("color")):
+            output["color"] = attributes["color"]
+
+        if (attributes.keys().__contains__("fabric")):
+            output["fabric"] = attributes["fabric"]
+
+        if (attributes.keys().__contains__("occasion")):
+            output["occasion"] = attributes["occasion"]
+
+        if (attributes.keys().__contains__("sleeve type")):
+            output["sleeve type"] = attributes["sleeve type"]
+
+        if (attributes.keys().__contains__("neck")):
+            output["neck"] = attributes["neck"]
+
+        if (attributes.keys().__contains__("price")):
+            output["price"] = attributes["price"]
+
+        if (attributes.keys().__contains__("size")):
+            output["size"] = attributes["size"]
+
+    return output
+
+
+
 @app.route("/", methods=['POST'])
 def f1():
     json = request.get_json()
@@ -404,20 +486,23 @@ def f1():
         frequency_penalty=0,
         presence_penalty=0,
         stop=None)
-
-    user_intention = response.choices[0].message.content
+    response=response.choices[0].message.content
+    response = response.replace("null", "None")
+    response = response.replace("t-shirt", "tshirt")
+    response = response.replace("t-shirts", "tshirt")
+    response = response.replace("kurtis", "kurti")
+    response = eval(response)
+    user_intention = response["intent"]
     products_list = []
     new_obj ={}
     print("user intent is : " + user_intention)
     if ("search" in user_intention.lower()):
         print("Search flow started")
-        extracted_attributes =  {"color": "red", "category": "kurti"}
+        extracted_attributes =  buildAttributesForSearch(response)
             #search(message)
         print("Attributes Extaction : " )
         print(extracted_attributes)
-        evaluadted=eval(str(extracted_attributes))
-        print("Evaluated " + str(evaluadted))
-        products_list = service.getPLPPojoList(evaluadted)
+        products_list = service.getPLPPojoList(extracted_attributes)
         print(products_list)
         print("Search flow ended")
         prev_input.append(input_string)
@@ -455,6 +540,125 @@ def f1():
     }
 
     return new_obj
+
+@app.route("/new", methods=['POST'])
+def newSearch():
+    json = request.get_json()
+    input_string = ""
+    print("PAST")
+    print(prev_input)
+    print(pre_output)
+    print("PAST")
+    raw_input_String=json["input_string"]
+    for i in range(len(pre_output)):
+        input_string = input_string + "past message : " + str(prev_input[i]) +" \n"
+        input_string = input_string + "past response : " + str(pre_output[i]) +" \n"
+
+    if(len(pre_output))>0:
+        input_string = input_string + "message : "+  json["input_string"]
+    else:
+        input_string = input_string +  json["input_string"]
+
+    message = "Answer with the json only for user input " + input_string
+    print("Input Message : " + input_string)
+    response = openai.ChatCompletion.create(
+    engine="TheGeneratorsGPT35-16k",
+        messages=[
+            {"role": "user", "content": message},
+            {"role": "system", "content": gunit_system}]
+        ,
+    temperature=0.5,
+    max_tokens=800,
+    top_p=0.95,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=None)
+
+    response=response.choices[0].message.content
+    raw_response=response
+    print("Response")
+    print(response)
+    response = response.replace("null", "None")
+    response = response.replace("t-shirt", "tshirt")
+    response = response.replace("t-shirts", "tshirt")
+    response = response.replace("kurtis", "kurti")
+    print("response 2")
+    response = eval(response)
+    user_intention = response["intent"]
+    products_list = []
+    new_obj ={}
+    print("user intent is : " + user_intention)
+    next_qsn=""
+    size_selection=""
+    address=""
+
+    if(response.keys().__contains__("next_question")):
+        next_qsn =response["next_question"]
+
+    if(response.keys().__contains__("size_selection")):
+        size_selection=response["size_selection"]
+
+    if(response.keys().__contains__("address")):
+        address=response["address"]
+
+
+    if(user_intention is None or user_intention ==""):
+        new_obj = {
+            "user_intent": user_intention.upper(),
+            "plp": func1(products_list),
+        }
+
+
+    if ("search" in user_intention.lower()):
+        print("Search flow started")
+        extracted_attributes =  buildAttributesForSearch(response)
+        #search(message)
+        print("Attributes Extaction : " )
+        print(extracted_attributes)
+        products_list = service.getPLPPojoList(extracted_attributes)
+        ##print(products_list)
+        print("Search flow ended")
+        prev_input.append(raw_input_String)
+        pre_output.append(raw_response)
+       # if()
+        new_obj = {
+            "user_intent": user_intention.upper(),
+            "plp": func1(products_list),
+        }
+
+    elif("pick" in user_intention.lower()):
+        pids_for_pickup= json["pids"]
+        print("pids" + str(pids_for_pickup))
+        plpBasedOnId=service.getPLPResponseFromPids(pids_for_pickup)
+        print(plpBasedOnId)
+        text=buildProductDescriptionBased(plpBasedOnId)
+        print("text : "  +str(text))
+        chosen_product_index = findIndex(text,input_string)
+        new_obj = {
+            "user_intent": user_intention.upper(),
+            "pdp": chosen_product_index,
+        }
+
+
+    #clear the prev msgs
+    elif("exit" in user_intention.lower()):
+        prev_input.clear()
+        pre_output.clear()
+        new_obj = {
+            "user_intent": user_intention.upper(),
+        }
+
+    else:
+        new_obj = {
+            "user_intent": user_intention.upper(),
+        }
+
+    new_obj["size_selection"]=size_selection
+    new_obj["next_qsn"]=next_qsn
+    new_obj["address"]=address
+
+    return new_obj
+
 
 
 @app.route("/fetchPlpBasedOnId", methods=['POST'])
