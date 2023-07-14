@@ -670,9 +670,8 @@ def fetchPlpBasedOnIdApi(pids):
     return new_obj
 
 @app.route("/", methods=['GET'])
-def fetchPlpBasedOnIdApi():
-    print("Hello")
-    return "hello"
+def fetchPlpBasedOasasnIdApi():
+    return 'Hello your IPv4 is: {}'.format(request.remote_addr)
 
 
 
